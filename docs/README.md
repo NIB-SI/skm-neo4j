@@ -1,47 +1,38 @@
-# 
+# SKM neo4j database manual
 
-**[Naming conventions](#naming-conventions) 1**
+This document is in development [here](https://docs.google.com/document/d/1AuAAfYakcSc04a0oggwkTqQybx8QemAau_yvpneRIKg/edit?usp=sharing). Please request acess to edit that document, as this is simply a pandoc conversion atm. 
 
-**[Schema](#schema) 1**
+## Index
+#### **[Naming conventions](#naming-conventions) 1**
 
-> [Node labels](#node-labels) 2
-> 
-> [Relationship Types](#relationship-types) 2
-> 
-> [Properties](#properties) 2
+#### **[Schema](#schema) 1**
 
-**[Defined reactions](#defined-reactions) 5**
+* [Node labels](#node-labels) 2
+* [Relationship Types](#relationship-types) 2
+* [Properties](#properties) 2
 
-> [binding / oligomerisation](#binding-oligomerisation) 5
-> 
-> [catalysis / auto-catalysis](#catalysis-auto-catalysis) 5
-> 
-> [protein activation](#protein-activation) 5
-> 
-> [transcriptional / translational
-> induction](#transcriptional-translational-induction) 5
+#### **[Defined reactions](#defined-reactions) 5**
 
-**[Example cypher](#example-cypher) 6**
+* [binding / oligomerisation](#binding-oligomerisation) 5
+* [catalysis / auto-catalysis](#catalysis-auto-catalysis) 5
+* [protein activation](#protein-activation) 5
+* [transcriptional / translational induction](#transcriptional-translational-induction) 5
 
-**[Installation and deployment by
-Docker](#installation-and-deployment-by-docker) 7**
+#### **[Example cypher](#example-cypher) 6**
 
-> [Repository structure](#repository-structure) 7
-> 
-> [Set up neo4j database](#set-up-neo4j-database) 7
-> 
-> [Link the neo4j database to a Jupyter
-> notebook](#link-the-neo4j-database-to-a-jupyter-notebook) 8
-> 
-> [Remove database](#remove-database) 8
-> 
-> [Dump a neo4j graph from Docker](#dump-a-neo4j-graph-from-docker) 9
+#### **[Installation and deployment by Docker](#installation-and-deployment-by-docker) 7**
 
-**[Q and A](#q-and-a) 10**
+* [Repository structure](#repository-structure) 7 
+* [Set up neo4j database](#set-up-neo4j-database) 7
+* [Link the neo4j database to a Jupyter notebook](#link-the-neo4j-database-to-a-jupyter-notebook) 8
+* [Remove database](#remove-database) 8
+* [Dump a neo4j graph from Docker](#dump-a-neo4j-graph-from-docker) 9
 
-#   
+#### **[Q and A](#q-and-a) 10**
 
-# Naming conventions
+---
+
+## 1. Naming conventions
 
   - > Node labels: UpperCamelCase
 
@@ -49,12 +40,10 @@ Docker](#installation-and-deployment-by-docker) 7**
 
   - > Property keys: snake\_case
 
-<!-- end list -->
 
-2.  #   
-    Schema
+## 2. Schema
     
-    1.  ## Node labels
+### 2.1.  Node labels
 
 | **Type**          | **Group**                | **Note** |
 | ----------------- | ------------------------ | -------- |
@@ -70,7 +59,7 @@ Docker](#installation-and-deployment-by-docker) 7**
 | Process           | component                |          |
 | PseudoNode        | pseudo                   |          |
 
-## **Relationship Types**
+### 2.2. Relationship Types
 
 | **Type**          | **Group**                     | **Note**                   | **In words**                                                          |
 | ----------------- | ----------------------------- | -------------------------- | --------------------------------------------------------------------- |
@@ -83,7 +72,7 @@ Docker](#installation-and-deployment-by-docker) 7**
 | MEMBER\_OF        | family/clade definitions      |                            | Source node (clade) is a member of target node (family)               |
 | COMPONENT\_OF     | complex/component definitions |                            | Source node is a component of target node (complex)                   |
 
-## Properties
+### 2.3. Properties
 
 | **Node/Edge** | **Group**    | **Property name**        | **Type**   | **Restricted to**                                    |
 | ------------- | ------------ | ------------------------ | ---------- | ---------------------------------------------------- |
@@ -122,11 +111,9 @@ Docker](#installation-and-deployment-by-docker) 7**
 | node          | pseudo       | name                     | string     |                                                      |
 | node          | pseudo       | reaction\_id             | string     |                                                      |
 
-#   
-
-3.  # Defined reactions
+## 3.  Defined reactions
     
-    1.  ### binding / oligomerisation
+### binding / oligomerisation
 
 > ![](media/image4.png)
 
@@ -142,25 +129,23 @@ Docker](#installation-and-deployment-by-docker) 7**
 
 > ![](media/image1.png)
 
-##   
-
-# Example cypher
+## 4. Example cypher
 
 Fetch all nodes:
 
-> MATCH (n) RETURN DISTINCT n.name AS name, n.level AS level
+    MATCH (n) RETURN DISTINCT n.name AS name, n.level AS level
 
-5.  # Installation and deployment by Docker
+## 5. Installation and deployment by Docker
     
-    5.  ## Repository structure
+### Repository structure
 
 Clone the repository to your computer:
 
-git clone <https://github.com//NIB-SI/>skm-neo4j.git
+    git clone <https://github.com//NIB-SI/>skm-neo4j.git
 
 Or if you have already cloned it, update it:
 
-git pull
+    git pull
 
 The repository is organised as follows:
 
@@ -216,50 +201,45 @@ work scripts & notebooks
 
 documentation
 
-**\*** graph.dump cannot be hosted on github.com and needs to be
-separately downloaded from \<\>.
-
-## Set up neo4j database
+### Set up neo4j database
 
 To deploy the graph database on your computer you will need docker.
 
 In the repository root folder (after downloading graph.dump), build the
 neo4j container with the graph:
 
-docker build --tag skm-graph .
+    docker build --tag skm-graph .
 
 To run this image:
 
-docker run -it -p7474:7474 -p1337:1337 -p7687:7687 -v$PWD/logs:/logs
--v$PWD/conf:/conf skm-graph
+    docker run -it -p7474:7474 -p1337:1337 -p7687:7687 -$PWD/logs:/logs -v$PWD/conf:/conf skm-graph
 
-And visit
-[<span class="underline">http://localhost:7474/</span>](http://localhost:7474/)
+And visit [http://localhost:7474](http://localhost:7474/). 
 
-## Link the neo4j database to a Jupyter notebook
+### Link the neo4j database to a Jupyter notebook
 
 Start up the neo4j database and link a jupyter notebook using
 docker-compose. To run the first time, navigate to the repo folder
 (containing docker-compose.yml) and run:
 
-docker-compose up
+    docker-compose up
 
 Thereafter you can use:
 
-docker-compose start
+    docker-compose start
 
 To stop the containers, use:
 
-docker-compose stop
+    docker-compose stop
 
 Or to stop and remove them:
 
-docker-compose down
+    docker-compose down
 
 Open your browser at the http://localhost:8888/?token=... link printed
 to the terminal. If the logs are not printed, run
 
-docker-compose logs | grep 'http://localhost:.\*/?token' | tail -1
+    docker-compose logs | grep 'http://localhost:.\*/?token' | tail -1
 
 to find the correct link.
 
@@ -267,62 +247,61 @@ to find the correct link.
 
 If you need to remove the graph image, first remove the container:
 
-> docker-compose down
+    docker-compose down
 
 Or get the container ID from the first column in:
 
-> docker ps -a | grep skm-graph
+    docker ps -a | grep skm-graph
 
 And delete it using:
 
-> docker rm \<container ID\>
+    docker rm \<container ID\>
 
 Then delete the image:
 
-> docker rmi skm-graph
+    docker rmi skm-graph
 
 Delete the folder with the graph data (if it exists).
 
-> sudo rm -rf data/db/
+    sudo rm -rf data/db/
 
-## Dump a neo4j graph from Docker
+### Dump a neo4j graph from Docker
 
 In neo4j enterprise edition, follow instructions
-[<span class="underline">here</span>](https://markhneedham.com/blog/2020/01/28/neo4j-database-dump-docker-container/).
+[here](https://markhneedham.com/blog/2020/01/28/neo4j-database-dump-docker-container/).
 
 For community edition, do the following (based on
-[<span class="underline">How do you perform a dump of a Neo4j database
-within a Docker
-container?</span>](https://serverfault.com/questions/835092/how-do-you-perform-a-dump-of-a-neo4j-database-within-a-docker-container)
+[How do you perform a dump of a Neo4j database
+within a Docker container?](https://serverfault.com/questions/835092/how-do-you-perform-a-dump-of-a-neo4j-database-within-a-docker-container)
 ):
 
-1.  > Start up a neo4j container, without starting the neo4j database:
+1.  Start up a neo4j container, without starting the neo4j database:
 
-> docker run \\
-> 
-> \--volume=$PWD/data/db/:/data \\
-> 
-> \--volume=$PWD/data/dumps:/dumps \\
-> 
-> \--ulimit=nofile=40000:40000 \\
-> 
-> \--name=dump \\
-> 
-> \-it \\
-> 
-> skm-graph \\
-> 
-> /bin/bash
+    ```bash
+    docker run \
+    --volume=$PWD/data/db/:/data \
+    --volume=$PWD/data/dumps:/dumps \
+    --ulimit=nofile=40000:40000 \
+    --name=dump \
+    -it \
+    skm-graph \
+    /bin/bash
+    ```
 
-2.  > Use neo4j-admin to dumb the graph:
+2. Use neo4j-admin to dumb the graph:
 
-> bin/neo4j-admin dump --database=pis --to=dumps/pis.dump
+    ```bash
+    bin/neo4j-admin dump --database=pis --to=dumps/pis.dump
+    ```
 
-3.  > Ctrl + d to exit the container. Remove the container:
 
-> docker rm dump
+3.  Ctrl + d to exit the container. Remove the container:
 
-6.  # Q and A
+    ```bash
+    docker rm dump
+    ```
+
+## 6. Q and A
     
     10. **Q:** Why do you not simply use “activates” (“inhibts”) edge
         for protein activation (protein deactivation) reactions?
@@ -334,4 +313,4 @@ not the same as deactivation of an activated protein
 
 **A:** …
 
-# Flow chart questions to choose reaction type
+## 7. Flow chart questions to choose reaction type
