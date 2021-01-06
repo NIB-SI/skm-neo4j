@@ -41,9 +41,9 @@ ENV PATH "${NEO4J_HOME}"/bin:$PATH
 
 WORKDIR "${NEO4J_HOME}"
 
-COPY ./data/dumps/pis.dump /tmp/pis.dump
-RUN bin/neo4j-admin load --from=/tmp/pis.dump --database=pis --force && \
-    rm /tmp/pis.dump
+COPY ./data/dumps/skm.dump /tmp/skm.dump
+RUN bin/neo4j-admin load --from=/tmp/skm.dump --database=skm --force && \
+    rm /tmp/skm.dump
 
 VOLUME /data /logs
 
