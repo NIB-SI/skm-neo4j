@@ -13,6 +13,8 @@ services:
     volumes:
       - ./logs:/logs
       - ./conf:/conf
+      - ./data/import:/var/lib/neo4j/import
+      - ./data/db:/data
 
   notebook:
     image: cbleker/jupyter-graph-notebook:latest
