@@ -1,9 +1,10 @@
 version: "3"
 services: 
   neo4j:
-    image: skm-graph
-    # build: 
-    #    context: .
+    image: skm-graph-dev
+    build: 
+        context: .
+        dockerfile: Dockerfile-dev
     environment:
       - NEO4J_AUTH=none
     ports:
@@ -13,17 +14,15 @@ services:
     volumes:
       - ./logs:/logs
       - ./conf:/conf
-        #      - ./data/import:/var/lib/neo4j/import
-        #      - ./data/db:/data
+      - ./data/import:/var/lib/neo4j/import
+      - ./data/db:/data
 
   notebook:
     image: cbleker/jupyter-graph-notebook:latest
     ports:
-      - "8888:8888"
+      - "8889:8888"
     links:
       - neo4j:neo4j
     volumes:
-      - ./examples:/home/jovyan/examples
       - ./work:/home/jovyan/work
       - ./data:/home/jovyan/data
-

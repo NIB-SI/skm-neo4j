@@ -1,10 +1,100 @@
 import numpy as np
 import pandas as pd
 
-def component_node_query(file_name, labels, 
+
+node_labels = [
+    'PlantCoding',
+    'PlantNonCoding',
+    'PlantAbstract',
+    'Complex',
+    'ExternalEntity', 
+    'ExternalCoding',
+    'ExternalNonCoding',
+    'ExternalAbstract',
+    'Process', 
+    'MetaboliteFamily',
+    'Metabolite',
+    'PseudoNode'
+]
+
+edge_labels = [
+    
+]
+
+species = [
+    'ath', 
+    'osa',
+    'sly',
+    'nta',
+    'ntb',
+    'stu'
+]
+
+def metabolite_node_query(file_name, 
+                          labels,
+                          n_name="line.NodeName"
+                        ):
+    if type(labels) == list:
+        node_label = ':' + ':'.join(labels)
+    else:
+        node_label = ':' + labels
+    
+    key = {"file_name":file_name, 
+           "node_label":node_label, 
+           "name":n_name}
+
+    q = '''USING PERIODIC COMMIT 500
+           LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
+           CREATE (p{node_label}   {{ 
+                name:{name}, 
+                added_by:line.AddedBy,
+                description:line.NodeDescription, 
+                additional_information: line.AdditionalInfo, 
+                model_version:line.ModelV,
+                model_status:line.ModelStatus, 
+                pathway:line.Process,
+                
+                external_links:split(line.external_links, ",")
+                
+            }})'''.format(**key)
+    
+    return q
+
+
+def external_node_query(file_name, 
+                         labels, 
                          n_name="line.NodeName"
                         ):
+    if type(labels) == list:
+        node_label = ':' + ':'.join(labels)
+    else:
+        node_label = ':' + labels
     
+    key = {"file_name":file_name, 
+           "node_label":node_label, 
+           "name":n_name}
+
+    q = '''USING PERIODIC COMMIT 500
+           LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
+           CREATE (p{node_label}   {{ 
+                name:{name}, 
+                added_by:line.AddedBy,
+                description:line.NodeDescription, 
+                additional_information: line.AdditionalInfo, 
+                model_version:line.ModelV,
+                pathway:line.Process,
+                species:split(line.species, ","),
+                external_links:split(line.external_links, ","),
+                                             
+                classification:line.classification
+            }})'''.format(**key)
+    
+    return q
+
+def bioelement_node_query(file_name, 
+                         labels, 
+                         n_name="line.NodeName"
+                        ):
     if type(labels) == list:
         node_label = ':' + ':'.join(labels)
     else:
@@ -15,88 +105,61 @@ def component_node_query(file_name, labels,
            "name":n_name}
 
     species_str = ""
-    for species in ['ath', 'nbe', 'nta', 'stu', 'osa']:
-        species_str += "{species}_homologues:split(line.{species}_homolog, ','),\n".format(species=species)
+    for specie in species:
+        species_str += f"{specie}_homologues:split(line.{specie}_homologues, ','),\n                "
 
-    
     
     q = '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p{node_label}   {{ 
                 name:{name}, 
                 added_by:line.AddedBy,
-                family:line.Family, 
-                clade:line.Clade, 
                 description:line.NodeDescription, 
                 additional_information: line.AdditionalInfo, 
-                
+                model_version:line.ModelV,
+                pathway:line.Process,
+                species:split(line.species, ","),
+                external_links:split(line.external_links, ","),
+                                
                 {species_str}
 
-                gmm_ocd:line.GMM_OCD1,
-                gmm_description:line.GMM_Description,
-                gmm_link:line.GMM_OCD, 
-                gmm_shortname:line.GMM_ShortName, 
-                gmm_synonyms:split(line.GMM_Synonyms, ","),
-                
-                external_database:line.ExternalDB,
-                chebi_identifier:line.chebi_identifier,
-                pubchem_identifier:line.pubchem_identifier,
-                
-                process:line.Process,
-                model_version:line.ModelV,
+                gomapman_ocd:line.gmm_ocd, 
+                gomapman_description:line.GMM_Description,
+                gomapman_shortname:line.GMM_ShortName, 
+                gomapman_synonyms:split(line.GMM_Synonyms, ",")
                
-                classification:line.classification
             }})'''.format(**key, species_str=species_str)
     
     return q
 
-
-
-def make_create_edge_query(file_name, edge_type,
-                           source_label="", target_label="",
-                           source_name="line.source_name", target_name="line.target_name",
-                           source_compartment="line.source_compartment", target_compartment="line.target_compartment",
-                           source_form="line.source_form", target_form="line.target_form"
-                          ):
-
-    if not source_label == "":
-        source_label = ':' + source_label
-        
-    if not target_label == "":
-        target_label = ':' + target_label
-                
-    key ={"file_name":file_name, "edge_type":edge_type,
-          "source_label":source_label, "target_label":target_label,
-          "source_name":source_name, "target_name":target_name, 
-          "source_compartment":source_compartment, "target_compartment":target_compartment,
-          "source_form":source_form, "target_form":target_form}
+def process_node_query(file_name, 
+                          labels,
+                          n_name="line.NodeName"
+                        ):
+    if type(labels) == list:
+        node_label = ':' + ':'.join(labels)
+    else:
+        node_label = ':' + labels
     
+    key = {"file_name":file_name, 
+           "node_label":node_label, 
+           "name":n_name}
+
     q = '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
-           
-           MATCH (source{source_label} {{ name:{source_name}}}),
-                 (target{target_label} {{ name:{target_name}}})
-           
-           CREATE (source)-[:{edge_type} {{
-                        added_by:line.AddedBy,
-                        observed_species:line.observed_species, 
-                        also_observed_in:split(line.also_observed_in, ","),
-                        additional_information: line.AdditionalInfo, 
-                        comment:line.Comment,
-                        process:line.Process, 
-                        reaction_effect:line.ReactionEffect,
-                        trust_level:line.trust_level, 
-                        literature_sources:line.literature_sources,
-                        reaction_type:line.reaction_type,
-                        reaction_mechanism:line.Modifications, 
-                        model_version:line.ModelV,
-                    
-                        source_compartment:{source_compartment},
-                        target_compartment:{target_compartment},                        
-                        source_form:{source_form},
-                        target_form:{target_form}
-                        }}]->(target)'''.format(**key)
-
+           CREATE (p{node_label}   {{ 
+                name:{name}, 
+                added_by:line.AddedBy,
+                description:line.NodeDescription, 
+                additional_information: line.AdditionalInfo, 
+                model_version:line.ModelV,
+                model_status:line.ModelStatus, 
+                pathway:line.Process,
+                
+                external_links:split(line.external_links, ",")
+                
+            }})'''.format(**key)
+    
     return q
 
 
@@ -114,7 +177,7 @@ def pseudo_node_query(file_name, name="line.RxID", reaction_id="line.RxID"):
                 reaction_id:{reaction_id}, 
 
                 added_by:line.AddedBy,
-                process:line.Process,
+                pathway:line.Process,
                 model_version:line.ModelV,
                 additional_information:line.AdditionalInfo
             }})'''.format(**key)    
@@ -125,13 +188,96 @@ def pseudo_node_query(file_name, name="line.RxID", reaction_id="line.RxID"):
 
 
 
-all_species = ['ath', 'stu', 'osa']
-homologue_cols = [f"_{x}_homologues" for x in all_species]
-substrate_cols = [ f'substrate{x}' for x in ['_newID', '_label', '_form', '_localisation']] +\
+# def make_create_edge_query(file_name, edge_type,
+#                            source_label="", target_label="",
+#                            source_name="line.source_name", target_name="line.target_name",
+#                            source_compartment="line.source_compartment", target_compartment="line.target_compartment",
+#                            source_form="line.source_form", target_form="line.target_form"
+#                           ):
+
+#     if not source_label == "":
+#         source_label = ':' + source_label
+        
+#     if not target_label == "":
+#         target_label = ':' + target_label
+                
+#     key ={"file_name":file_name, "edge_type":edge_type,
+#           "source_label":source_label, "target_label":target_label,
+#           "source_name":source_name, "target_name":target_name, 
+#           "source_compartment":source_compartment, "target_compartment":target_compartment,
+#           "source_form":source_form, "target_form":target_form}
+    
+#     q = '''USING PERIODIC COMMIT 500
+#            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
+           
+#            MATCH (source{source_label} {{ name:{source_name}}}),
+#                  (target{target_label} {{ name:{target_name}}})
+           
+#            CREATE (source)-[:{edge_type} {{
+#                         added_by:line.AddedBy,
+#                         observed_species:line.observed_species, 
+#                         also_observed_in:split(line.also_observed_in, ","),
+#                         additional_information: line.AdditionalInfo, 
+#                         comment:line.Comment,
+#                         process:line.Process, 
+#                         reaction_effect:line.ReactionEffect,
+#                         trust_level:line.trust_level, 
+#                         external_links:line.external_links,
+#                         reaction_type:line.reaction_type,
+#                         reaction_mechanism:line.Modifications, 
+#                         model_version:line.ModelV,
+                    
+#                         source_compartment:{source_compartment},
+#                         target_compartment:{target_compartment},                        
+#                         source_form:{source_form},
+#                         target_form:{target_form}
+#                         }}]->(target)'''.format(**key)
+
+#     return q
+
+
+
+def make_create_type_of_edge_query(file_name, edge_type,
+                           source_label="", target_label="",
+                           source_name="line.source_name", target_name="line.target_name",
+                          ):
+
+    if not source_label == "":
+        source_label = ':' + source_label
+        
+    if not target_label == "":
+        target_label = ':' + target_label
+                
+    key ={"file_name":file_name, "edge_type":edge_type,
+          "source_label":source_label, "target_label":target_label,
+          "source_name":source_name, "target_name":target_name, 
+         }
+    
+    q = '''USING PERIODIC COMMIT 500
+           LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
+           
+           MATCH (source{source_label} {{ name:{source_name}}}),
+                 (target{target_label} {{ name:{target_name}}})
+           
+           CREATE (source)-[:{edge_type} {{
+                        added_by:line.AddedBy,
+                        additional_information: line.AdditionalInfo, 
+                        model_version:line.ModelV,
+                        model_status:line.ModelStatus,
+                        
+                        pathway:line.Process
+                        }}]->(target)'''.format(**key)
+
+    return q
+
+
+
+homologue_cols = [f"_{x}_homologues" for x in species]
+substrate_cols = [ f'substrate{x}' for x in ['_newID', '_label', '_form', '_location']] +\
                 [f"substrate{x}" for x in homologue_cols]
-catalyst_cols = [ f'catalyst{x}' for x in ['_newID', '_label', '_form', '_localisation']] +\
+catalyst_cols = [ f'catalyst{x}' for x in ['_newID', '_label', '_form', '_location']] +\
                 [f"catalyst{x}" for x in homologue_cols] 
-product_cols = [ f'product{x}' for x in ['_newID', '_label', '_form', '_localisation']] +\
+product_cols = [ f'product{x}' for x in ['_newID', '_label', '_form', '_location']] +\
                 [f"product{x}" for x in homologue_cols]                
 
 
@@ -146,10 +292,10 @@ def dict_to_str(d):
 
 def get_keys(key_prefix, line_prefix):
     keys = {}
-    for value in ["form", "localisation"]: 
+    for value in ["form", "location"]: 
         keys[f"{key_prefix}_{value}"] = f"line.{line_prefix}_{value}"
-    for species in all_species:
-        keys[f"{key_prefix}_{species}_homologues"] = f"split(line.{line_prefix}_{species}_homologues, ',')"
+    for specie in species:
+        keys[f"{key_prefix}_{specie}_homologues"] = f"split(line.{line_prefix}_{specie}_homologues, ',')"
     
     return keys
 
@@ -194,30 +340,31 @@ def make_create_reaction_edge_query(file_name, edge_type,
 
                         added_by:line.AddedBy,
                         reaction_id:line.RxID,
-                        observed_species:line.observed_species, 
-                        also_observed_in:split(line.also_observed_in, ","),
+                        species:split(line.species, ","),
                         additional_information: line.AdditionalInfo, 
-                        comment:line.Comment,
-                        process:line.Process, 
+                        pathway:line.Process, 
                         reaction_effect:line.ReactionEffect,
                         trust_level:line.trust_level, 
-                        literature_sources:line.literature_sources,
+                        external_links:line.external_links,
                         reaction_type:line.reaction_type,
                         reaction_mechanism:line.Modifications, 
                         reaction_kinetics:line.kinetics, 
-                        model_version:line.ModelV
+                        model_version:line.ModelV,
+                        model_status:line.ModelStatus
+
                         }}]->(target)'''.format(**key, source_str=source_str, target_str=target_str)
 
     return q
 
 
 def make_create_requlatory_edge_query(file_name, edge_type, 
-                                    source_prefix, target_prefix, 
+                                    source_prefix, target_prefix, product_prefix,
                                     source_label="", target_label="", 
                                     source_name=None, 
                                     target_name=None):
 
     if not (edge_type in ['ACTIVATES', 'INHIBITS']):
+        print("Not regulatory edge type")
         return 
     
     if not source_label == "":
@@ -233,6 +380,9 @@ def make_create_requlatory_edge_query(file_name, edge_type,
     source_str = dict_to_str(get_keys("source", source_prefix))
     target_str = dict_to_str(get_keys("target", target_prefix))
 
+    product_str = dict_to_str(get_keys("product", product_prefix))
+    
+   
     if source_name:
         key['source_name'] = source_name
     else:
@@ -252,14 +402,14 @@ def make_create_requlatory_edge_query(file_name, edge_type,
 
                         {source_str}
                         {target_str}
+                        
+                        {product_str}
 
                         added_by:line.AddedBy,
                         reaction_id:line.RxID,
-                        observed_species:line.observed_species, 
-                        also_observed_in:split(line.also_observed_in, ","),
+                        species:split(line.species, ","),
                         additional_information: line.AdditionalInfo, 
-                        comment:line.Comment,
-                        process:line.Process, 
+                        pathway:line.Process, 
                         reaction_effect:line.ReactionEffect,
                         trust_level:line.trust_level, 
                         literature_sources:line.literature_sources,
@@ -267,12 +417,9 @@ def make_create_requlatory_edge_query(file_name, edge_type,
                         reaction_mechanism:line.Modifications, 
                         reaction_kinetics:line.kinetics, 
                         model_version:line.ModelV
-                        }}]->(target)'''.format(**key, source_str=source_str, target_str=target_str)
+                        }}]->(target)'''.format(**key, source_str=source_str, target_str=target_str, product_str=product_str)
 
     return q
-
-
-
 
 empty_strings = ["-", "?", "[empty]", "nan", "n.a.", np.nan, '[undefined]', '']
 
@@ -281,7 +428,7 @@ def only_asci(x):
     return "".join([character for character in x if character.isascii()])
 
 
-def string_to_nice_string(x, delim="|"):
+def list_string_to_nice_string(x, delim="|"):
     if not (x in empty_strings):
         nice_list = [y.strip() for y in str(x).split(delim)]
         return ",".join(nice_list)
@@ -309,6 +456,14 @@ def get_latest_model(x):
         m = 'v0.0'
     return m
 
+def get_model_status(x):
+    x = set(x)
+    if 'use' in x:
+        return 'use'
+    elif 'orthology' in x:
+        return 'orthology'
+    else:
+        return 'ignore'
 
 def list_to_string(x):
     l = []
