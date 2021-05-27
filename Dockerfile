@@ -41,7 +41,7 @@ ENV PATH "${NEO4J_HOME}"/bin:$PATH
 
 WORKDIR "${NEO4J_HOME}"
 
-COPY ./data/dumps/skm.dump /tmp/skm.dump
+COPY ./data/dumps/skm-v0.0.2.dump /tmp/skm.dump
 RUN bin/neo4j-admin load --from=/tmp/skm.dump --database=skm --force && \
     rm /tmp/skm.dump
 

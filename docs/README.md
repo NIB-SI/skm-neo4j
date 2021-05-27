@@ -265,7 +265,7 @@ Delete the folder with the graph data (if it exists).
 
     sudo rm -rf data/db/
 
-### Dump a neo4j graph from Docker
+### (dev only) Dump a neo4j graph from Docker
 
 In neo4j enterprise edition, follow instructions
 [here](https://markhneedham.com/blog/2020/01/28/neo4j-database-dump-docker-container/).
@@ -284,14 +284,14 @@ within a Docker container?](https://serverfault.com/questions/835092/how-do-you-
     --ulimit=nofile=40000:40000 \
     --name=dump \
     -it \
-    skm-graph \
+    skm-graph-dev \
     /bin/bash
     ```
 
 2. Use neo4j-admin to dumb the graph:
 
     ```bash
-    bin/neo4j-admin dump --database=pis --to=dumps/pis.dump
+    bin/neo4j-admin dump --database=skm --to=/dumps/skm-v<version number>.dump
     ```
 
 
