@@ -126,7 +126,8 @@ def bioelement_node_query(file_name,
                 gomapman_ocd:line.gmm_ocd, 
                 gomapman_description:line.GMM_Description,
                 gomapman_shortname:line.GMM_ShortName, 
-                gomapman_synonyms:split(line.GMM_Synonyms, ",")
+                
+                synonyms:split(line.synonyms, ",")
                
             }})'''.format(**key, species_str=species_str)
     
@@ -163,7 +164,7 @@ def process_node_query(file_name,
     return q
 
 
-def pseudo_node_query(file_name, name="line.RxID", reaction_id="line.RxID"):
+def pseudo_node_query(file_name, name="line.reaction_id", reaction_id="line.reaction_id"):
     
     key = {"file_name":file_name, 
            "name":name, 
@@ -339,7 +340,7 @@ def make_create_reaction_edge_query(file_name, edge_type,
                         {target_str}
 
                         added_by:line.AddedBy,
-                        reaction_id:line.RxID,
+                        reaction_id:line.reaction_id,
                         species:split(line.species, ","),
                         additional_information: line.AdditionalInfo, 
                         pathway:line.Process, 
@@ -406,7 +407,7 @@ def make_create_requlatory_edge_query(file_name, edge_type,
                         {product_str}
 
                         added_by:line.AddedBy,
-                        reaction_id:line.RxID,
+                        reaction_id:line.reaction_id,
                         species:split(line.species, ","),
                         additional_information: line.AdditionalInfo, 
                         pathway:line.Process, 
