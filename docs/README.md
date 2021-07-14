@@ -1,3 +1,7 @@
+# README! 
+
+For on-dev purposes use branch v0.0.3. 
+
 # SKM neo4j database manual
 
 This document is in development [here](https://docs.google.com/document/d/1AuAAfYakcSc04a0oggwkTqQybx8QemAau_yvpneRIKg/edit?usp=sharing). Please request acess to edit that document, as this is simply a pandoc conversion atm. 
