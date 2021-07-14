@@ -1,6 +1,6 @@
 # README! 
 
-For on-dev purposes use branch v0.0.3. 
+For non-dev purposes use branch v0.0.3. 
 
 # SKM neo4j database manual
 
