@@ -470,7 +470,7 @@ def list_to_string(x):
     l = []
     for s in x:
         s = str(s)
-        if not s in empty_strings:
+        if not (s in empty_strings):
             l.append(s)
     
     return ",".join(l)

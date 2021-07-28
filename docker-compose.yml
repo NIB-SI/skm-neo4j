@@ -1,11 +1,13 @@
 version: "3"
 services: 
   neo4j:
-    image: skm-graph
-    # build: 
-    #    context: .
+    image: neo4j:4.3
     environment:
       - NEO4J_AUTH=none
+      - NEO4J_apoc_export_file_enabled=true 
+      - NEO4J_apoc_import_file_enabled=true 
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4JLABS_PLUGINS=\[\"apoc\"\] 
     ports:
       - "7474:7474"
       - "1337:1337"
@@ -13,8 +15,9 @@ services:
     volumes:
       - ./logs:/logs
       - ./conf:/conf
-        #      - ./data/import:/var/lib/neo4j/import
-        #      - ./data/db:/data
+      - ./data/import:/var/lib/neo4j/import
+      - ./data/db:/data
+      - ./plugins:/plugins
 
   notebook:
     image: cbleker/jupyter-graph-notebook:latest
@@ -26,4 +29,7 @@ services:
       - ./examples:/home/jovyan/examples
       - ./work:/home/jovyan/work
       - ./data:/home/jovyan/data
-
+    environment: 
+      - NB_UID=7474
+      - NB_GID=7474
+    user: root
