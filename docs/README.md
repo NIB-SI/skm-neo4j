@@ -3,7 +3,7 @@
 ```bash
 git clone git@github.com:NIB-SI/skm-neo4j.git
 cd skm-neo4j
-git checkout v0.0.3
+git checkout v0.0.5
 
 docker build . --tag skm-graph
 docker run -it -p7474:7474 -p1337:1337 -p7687:7687 -v$PWD/conf:/conf skm-graph

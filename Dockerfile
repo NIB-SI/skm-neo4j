@@ -1,10 +1,10 @@
 FROM openjdk:11-jdk-slim
 
-ENV NEO4J_SHA256=4f663a520bec40dfd0b1972feb3cf93af321c230b448adb6dc917717e67a1271 \
-    NEO4J_TARBALL=neo4j-community-4.1.1-unix.tar.gz \
+ENV NEO4J_SHA256=3474f3ec9da57fb627af71652ae6ecbd036e6ea689379f09e77e4cd8ba4b5515 \
+    NEO4J_TARBALL=neo4j-community-4.3.2-unix.tar.gz \
     NEO4J_EDITION=community \
     NEO4J_HOME="/var/lib/neo4j"
-ARG NEO4J_URI=https://dist.neo4j.org/neo4j-community-4.1.1-unix.tar.gz
+ARG NEO4J_URI=https://dist.neo4j.org/neo4j-community-4.3.2-unix.tar.gz
 ARG TINI_SHA256="12d20136605531b09a2c2dac02ccee85e1b874eb322ef6baf7561cd93f93c855"
 ARG TINI_URI="https://github.com/krallin/tini/releases/download/v0.18.0/tini"
 
@@ -41,7 +41,7 @@ ENV PATH "${NEO4J_HOME}"/bin:$PATH
 
 WORKDIR "${NEO4J_HOME}"
 
-COPY ./data/dumps/skm-v0.0.4.dump /tmp/skm.dump
+COPY ./data/dumps/skm-v0.0.5.dump /tmp/skm.dump
 RUN bin/neo4j-admin load --from=/tmp/skm.dump --database=skm --force && \
     rm /tmp/skm.dump
 
