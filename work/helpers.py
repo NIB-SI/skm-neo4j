@@ -14,7 +14,7 @@ node_labels = [
     'Process', 
     'MetaboliteFamily',
     'Metabolite',
-    'PseudoNode'
+    'Reaction'
 ]
 
 edge_labels = [
@@ -164,26 +164,41 @@ def process_node_query(file_name,
     return q
 
 
-def pseudo_node_query(file_name, name="line.reaction_id", reaction_id="line.reaction_id"):
-    
+def reaction_node_query(file_name, name="line.reaction_id", reaction_id="line.reaction_id"):
+    print(222)
     key = {"file_name":file_name, 
            "name":name, 
           "reaction_id":reaction_id, 
-          "label":"PseudoNode"}
+          "label":"Reaction"}
     
     q = '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p:{label}   {{ 
                 name:{name}, 
-                reaction_id:{reaction_id}, 
-
                 added_by:line.AddedBy,
-                pathway:line.Process,
-                model_version:line.ModelV,
-                additional_information:line.AdditionalInfo
+                reaction_id:line.reaction_id,
+                species:split(line.species, ","),
+                additional_information: line.AdditionalInfo, 
+                reaction_effect:line.ReactionEffect,
+                trust_level:line.trust_level, 
+                external_links:split(line.external_links, ","),
+                reaction_type:line.reaction_type,
+                reaction_mechanism:line.Modifications, 
+                reaction_kinetics:line.kinetics, 
+                model_version:line.ModelV
+                
             }})'''.format(**key)    
 
     return q
+
+
+
+
+
+
+
+
+
 
 
 
@@ -339,20 +354,10 @@ def make_create_reaction_edge_query(file_name, edge_type,
                         {source_str}
                         {target_str}
 
-                        added_by:line.AddedBy,
                         reaction_id:line.reaction_id,
-                        species:split(line.species, ","),
-                        additional_information: line.AdditionalInfo, 
-                        pathway:line.Process, 
-                        reaction_effect:line.ReactionEffect,
-                        trust_level:line.trust_level, 
-                        external_links:line.external_links,
                         reaction_type:line.reaction_type,
-                        reaction_mechanism:line.Modifications, 
-                        reaction_kinetics:line.kinetics, 
-                        model_version:line.ModelV,
-                        model_status:line.ModelStatus
-
+                        reaction_kinetics:line.kinetics
+                        
                         }}]->(target)'''.format(**key, source_str=source_str, target_str=target_str)
 
     return q
