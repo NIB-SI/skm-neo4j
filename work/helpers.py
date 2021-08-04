@@ -6,16 +6,34 @@ node_labels = [
     'PlantCoding',
     'PlantNonCoding',
     'PlantAbstract',
+    
+    'ForeignEntity', 
+    'ForeignCoding',
+    'ForeignNonCoding',
+    'ForeignAbstract',
+    
     'Complex',
-    'ExternalEntity', 
-    'ExternalCoding',
-    'ExternalNonCoding',
-    'ExternalAbstract',
     'Process', 
     'MetaboliteFamily',
     'Metabolite',
     'Reaction'
 ]
+
+
+foreign_node_labels = [
+    'ForeignEntity', 
+    'ForeignCoding',
+    'ForeignNonCoding',
+    'ForeignAbstract',
+]
+
+plant_node_labels = [
+    'PlantCoding',
+    'PlantNonCoding',
+    'PlantAbstract'
+]
+
+
 
 edge_labels = [
     
@@ -61,14 +79,16 @@ def metabolite_node_query(file_name,
     return q
 
 
-def external_node_query(file_name, 
+def foreign_node_query(file_name, 
                          labels, 
                          n_name="line.NodeName"
                         ):
+    
+    base_label = ':Foreign'
     if type(labels) == list:
-        node_label = ':' + ':'.join(labels)
+        node_label = base_label + ':' + ':'.join(labels)
     else:
-        node_label = ':' + labels
+        node_label = base_label + ':' + labels
     
     key = {"file_name":file_name, 
            "node_label":node_label, 
@@ -95,10 +115,11 @@ def bioelement_node_query(file_name,
                          labels, 
                          n_name="line.NodeName"
                         ):
+    base_label = ':Plant'
     if type(labels) == list:
-        node_label = ':' + ':'.join(labels)
+        node_label = base_label + ':' + ':'.join(labels)
     else:
-        node_label = ':' + labels
+        node_label = base_label + ':' + labels
     
     key = {"file_name":file_name, 
            "node_label":node_label, 
