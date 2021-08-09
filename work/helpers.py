@@ -35,8 +35,13 @@ plant_node_labels = [
 
 
 
-edge_labels = [
-    
+edge_labels = [  
+    'ACTIVATES',
+    'INHIBITS',
+    'PRODUCT',
+    'SUBSTRATE',
+    'TRANSLOCATE_FROM',
+    'TRANSLOCATE_TO'
 ]
 
 species = [
@@ -48,14 +53,16 @@ species = [
     'stu'
 ]
 
+
 def metabolite_node_query(file_name, 
                           labels,
                           n_name="line.NodeName"
                         ):
+    base_label = ':Metabolite'
     if type(labels) == list:
-        node_label = ':' + ':'.join(labels)
+        node_label = base_label + ':' + ':'.join(labels)
     else:
-        node_label = ':' + labels
+        node_label = base_label + ':' + labels
     
     key = {"file_name":file_name, 
            "node_label":node_label, 
@@ -186,7 +193,6 @@ def process_node_query(file_name,
 
 
 def reaction_node_query(file_name, name="line.reaction_id", reaction_id="line.reaction_id"):
-    print(222)
     key = {"file_name":file_name, 
            "name":name, 
           "reaction_id":reaction_id, 
