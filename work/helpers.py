@@ -464,7 +464,7 @@ def only_asci(x):
 def list_string_to_nice_string(x, delim="|"):
     if not (x in empty_strings):
         nice_list = [y.strip() for y in str(x).split(delim)]
-        return ",".join(nice_list)
+        return ", ".join(nice_list)
     else:
         return ""
 
