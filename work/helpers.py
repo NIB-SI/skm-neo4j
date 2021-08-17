@@ -151,9 +151,9 @@ def bioelement_node_query(file_name,
                                 
                 {species_str}
 
-                gomapman_ocd:line.gmm_ocd, 
+                gomapman_ocd:split(line.gmm_ocd, ","), 
                 gomapman_description:line.GMM_Description,
-                gomapman_shortname:line.GMM_ShortName, 
+                gomapman_shortname:split(line.GMM_ShortName, ","), 
                 
                 synonyms:split(line.synonyms, ",")
                
