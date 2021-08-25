@@ -18,6 +18,7 @@ services:
       - ./data/import:/var/lib/neo4j/import
       - ./data/db:/data
       - ./plugins:/plugins
+    user: ${USER_UID}:${USER_GID}
 
   notebook:
     image: cbleker/jupyter-graph-notebook:latest
@@ -30,6 +31,6 @@ services:
       - ./work:/home/jovyan/work
       - ./data:/home/jovyan/data
     environment: 
-      - NB_UID=7474
-      - NB_GID=7474
+      - NB_UID=${USER_UID}
+      - NB_GID=${USER_GID}
     user: root
