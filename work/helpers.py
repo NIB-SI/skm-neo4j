@@ -3,6 +3,8 @@ import pandas as pd
 
 
 node_labels = [
+    'FunctionalCluster',
+    
     'PlantCoding',
     'PlantNonCoding',
     'PlantAbstract',
@@ -17,6 +19,21 @@ node_labels = [
     'MetaboliteFamily',
     'Metabolite',
     'Reaction'
+]
+
+
+reaction_participant_labels = [
+    'FunctionalCluster',
+    
+    'ForeignEntity', 
+    'ForeignCoding',
+    'ForeignNonCoding',
+    'ForeignAbstract',
+   
+    'Complex',
+    'Process', 
+    'MetaboliteFamily',
+    'Metabolite',
 ]
 
 
@@ -122,11 +139,12 @@ def bioelement_node_query(file_name,
                          labels, 
                          n_name="line.NodeName"
                         ):
-    base_label = ':Plant'
+    
+
     if type(labels) == list:
-        node_label = base_label + ':' + ':'.join(labels)
+        node_label = ':' + ':'.join(labels)
     else:
-        node_label = base_label + ':' + labels
+        node_label = ':' + labels
     
     key = {"file_name":file_name, 
            "node_label":node_label, 
@@ -336,10 +354,7 @@ def dict_to_str(d):
 def get_keys(key_prefix, line_prefix):
     keys = {}
     for value in ["form", "location"]: 
-        keys[f"{key_prefix}_{value}"] = f"line.{line_prefix}_{value}"
-    for specie in species:
-        keys[f"{key_prefix}_{specie}_homologues"] = f"split(line.{line_prefix}_{specie}_homologues, ',')"
-    
+        keys[f"{key_prefix}_{value}"] = f"line.{line_prefix}_{value}"   
     return keys
 
 def make_create_reaction_edge_query(file_name, edge_type, 
@@ -347,13 +362,17 @@ def make_create_reaction_edge_query(file_name, edge_type,
                                     source_label="", target_label="", 
                                     source_name=None, 
                                     target_name=None):
-
-    if not source_label == "":
+    if type(source_label) == list:
+        source_label = ':' + ':'.join(source_label)
+    elif not source_label == "":
         source_label = ':' + source_label
-        
-    if not target_label == "":
+    
+    if type(target_label) == list:
+        target_label = ':' + ':'.join(target_label)
+    elif not target_label == "":
         target_label = ':' + target_label
-                
+
+    
     key ={"file_name":file_name, "edge_type":edge_type,
           "source_label":source_label, "target_label":target_label}
     
