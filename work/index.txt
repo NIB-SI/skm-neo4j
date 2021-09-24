@@ -1,0 +1,13 @@
+MATCH (n:FunctionalCluster) CALL apoc.create.addLabels(n, ['Plant']) YIELD node RETURN node
+
+    CREATE FULLTEXT INDEX plant_all
+    FOR (m:Plant)
+    ON EACH [
+        m.name,
+        m._synonyms,
+        m.description,
+        m.additional_information,
+
+        m._external_links,
+        m._identifiers
+        ]
