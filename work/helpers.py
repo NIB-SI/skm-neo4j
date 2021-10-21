@@ -67,7 +67,9 @@ species = [
     'sly',
     'nta',
     'ntb',
-    'stu'
+    'stu', 
+    'ptr', 
+    'vvi',
 ]
 
 
@@ -473,7 +475,7 @@ def make_create_requlatory_edge_query(file_name, edge_type,
 
     return q
 
-empty_strings = ["-", "?", "[empty]", "nan", "n.a.", np.nan, '[undefined]', '']
+empty_strings = ["-", "?", "[empty]", "nan", "n.a.", np.nan, '[undefined]', 'NULL', '']
 
 
 def only_asci(x):
