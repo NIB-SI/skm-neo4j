@@ -171,36 +171,36 @@ def add_row(conn, data, super_class):
 def get_identifier(conn, data, super_class):
     #print(super_class, data)
     cur = conn.cursor()
-    
-    if super_class == 'specie':
-        sql = '''SELECT identifier
-                 FROM specie_identifier
-                 WHERE name = ?
-                 AND form = ?
-                 AND  location = ?'''
-    
-    elif super_class == 'arc':
+
+    if super_class == 'arc':
         sql = '''SELECT identifier
                  FROM arc_identifier 
                  WHERE reaction_id = ?
                  AND source_id = ?
                  AND target_id = ?'''
-    
+
     elif super_class == 'compartment':
         sql = '''SELECT identifier
                  FROM compartment_identifier 
                  WHERE name = ?'''
-        
+
     elif super_class == 'reaction':
         sql = '''SELECT identifier
                  FROM reaction_identifier
                  WHERE reaction_id = ?'''        
-        
+
+    elif super_class == 'specie':
+        sql = '''SELECT identifier
+                 FROM specie_identifier
+                 WHERE name = ?
+                 AND form = ?
+                 AND  location = ?'''
+
     else:
         return
-    
+
     cur.execute(sql, data)
-    
+
     try:
         row = next(iter(cur))
     except Exception as e:
@@ -208,12 +208,7 @@ def get_identifier(conn, data, super_class):
         raise e
 
     row_identifier = row[0]
-    #x, y = row[1], row[2]
-        
-        
-    identifier = f'{super_class[0]}{row_identifier}'
-    
-    return identifier
+    return f'{super_class[0]}{row_identifier}'
 
 def set_coords(conn, data, super_class): 
     cur = conn.cursor()    
@@ -322,34 +317,30 @@ def create_glyph(libsbgn_map, conn,
         unique identifier of created glyph
     '''
     # make/get unique glyph id
-    
+
     #print(super_class, data)
     identifier, status =  add_row(conn, data, super_class)
-   
-    if status == 0:
-        # no rows added --> already in db and glyph was already created
-        pass
-    
-    else:    
+
+    if status != 0:
         #print(super_class, data)
         # it was added to the db, now add the glyph as well
         g = libsbgn.glyph(class_=class_, id=identifier)
-        
+
         if name:
             g.set_label(libsbgn.label(text=name))
 
         if inside:
             inside_identifier = compartment_glyph(libsbgn_map, conn, inside)
-            if not (inside_identifier is None):
+            if inside_identifier is not None:
                 g.set_compartmentRef(inside_identifier)
-        
+
         if state:
             state_identifier = f'{identifier}.state'
             state_var = libsbgn.glyph(class_=GlyphClass.STATE_VARIABLE, id=state_identifier)
             state_var.set_state(libsbgn.stateType(state))
             g.add_glyph(state_var)
-            
-        add_h = 0  
+
+        add_h = 0
         if (children is None):
             children = []
         for i, (child_name, child_class) in enumerate(children):
@@ -360,29 +351,29 @@ def create_glyph(libsbgn_map, conn,
             child.set_bbox(libsbgn.bbox(x=110, y=25, w=100, h=40))
             g.add_glyph(child)
             add_h += child_h
-        
+
         # if children, adjust h
         w, h = class_to_size[class_]
         if len(children) > 0:
             h = h + add_h + class_to_size['complex_btw_h'] * (len(children)-1)
-        
+
         if class_ == GlyphClass.COMPARTMENT:
             w, h = compartment_to_size[name]
             x, y = compartment_to_xy[name]
-        
+
         else:
             # x ~ w, y~ h
             parent_x0, parent_y0 = compartment_to_xy[inside]
             parent_delta_x, parent_delta_y = compartment_to_size[inside]
             parent_x1, parent_y1 = parent_x0 + parent_delta_x, parent_y0 + parent_delta_y
-            
+
             x = random.randint(parent_x0, parent_x1 - w)
             y = random.randint(parent_y0, parent_y1 - h)
-            
+
         g.set_bbox(libsbgn.bbox(w=w, h=h, x=x, y=y))
-        
+
         libsbgn_map.add_glyph(g)
-        
+
         data = (x, y, *data)
         set_coords(conn, data, super_class)
 
@@ -406,18 +397,14 @@ def compartment_glyph(libsbgn_map, conn, name):
     
     if name == 'extracellular':
         return None
-    
+
     class_ = GlyphClass.COMPARTMENT
     data = (name,)
-    
-    if name == 'cytoplasm':
-        inside = None
-    else:
-        inside = 'cytoplasm'
 
-    identifier = create_glyph(libsbgn_map, conn, name, class_, 'compartment', data, inside=inside)
-
-    return identifier
+    inside = None if name == 'cytoplasm' else 'cytoplasm'
+    return create_glyph(
+        libsbgn_map, conn, name, class_, 'compartment', data, inside=inside
+    )
     
 def node_glyph(libsbgn_map, conn, name, form, location):
     '''Create a glyph representing a model species
@@ -442,24 +429,28 @@ def node_glyph(libsbgn_map, conn, name, form, location):
     children = []
     if class_ == GlyphClass.COMPLEX:
         components = get_complex_components(name)
-        for child in components:
-            child_name = child['name']
-            child_label = child['label']
-            child_class = label_to_class[child_label]
-            children.append((child_name, child_class))
-    
+        children.extend(
+            (child['name'], label_to_class[child['label']])
+            for child in components
+        )
     if location is None:
         #print('location was none', end='\t')
         location = 'cytoplasm'
         #print(f'now location is {location}')
     location = location.replace("putative:", "")
 
-    data = (name, form, location)    
-    identifier = create_glyph(libsbgn_map, conn, name, 
-                              class_, 'specie', data, 
-                              inside=location, state=state, 
-                             children=children)
-    return identifier
+    data = (name, form, location)
+    return create_glyph(
+        libsbgn_map,
+        conn,
+        name,
+        class_,
+        'specie',
+        data,
+        inside=location,
+        state=state,
+        children=children,
+    )
 
 
 def reaction_glyph(libsbgn_map, conn, reaction_id, class_, location):
@@ -484,12 +475,12 @@ def reaction_glyph(libsbgn_map, conn, reaction_id, class_, location):
     if location is None:
         location = 'cytoplasm'
     location = location.replace("putative:", "")
-    
-    
-    data = (reaction_id,)
-    identifier = create_glyph(libsbgn_map, conn, None, class_, 'reaction', data, inside=location)
 
-    return identifier
+
+    data = (reaction_id,)
+    return create_glyph(
+        libsbgn_map, conn, None, class_, 'reaction', data, inside=location
+    )
 
 
 def reaction_arc(libsbgn_map, conn, source_id, target_id, reaction_id, class_):
@@ -510,21 +501,18 @@ def reaction_arc(libsbgn_map, conn, source_id, target_id, reaction_id, class_):
     data = (reaction_id, source_id, target_id)
     identifier, status =  add_row(conn, data, 'arc')
 
-    if status == 0:
-        # no rows added --> already in db and arc was already created
-        pass
-    else:
+    if status != 0:
         # make unique arc id
         a = libsbgn.arc(class_=class_, 
                         source=source_id, target=target_id, 
                         id=identifier)
 
-        source_x, source_y = get_coords(conn, source_id)      
+        source_x, source_y = get_coords(conn, source_id)
         a.set_start(libsbgn.startType(x=source_x+5, y=source_y+5))
-        
+
         target_x, target_y = get_coords(conn, target_id)
         a.set_end(libsbgn.endType(x=target_x+5, y=target_y+5))
-        
+
         libsbgn_map.add_arc(a)
 
     return identifier
@@ -535,52 +523,52 @@ def add_reaction(libsbgn_map, conn, reaction_id, edge_list):
     # each reaction has> >=~4 nodes and >=3 arcs
     # substrate 1/+, product 1/+, process 1, modifier 1/+ nodes
     # consumption, production and modulation arcs
-    
+
     substrates = set()
     products = set()
     modifiers = set()  
-    
+
     reaction_type = edge_list[0]['reaction_type']
     process_glyph_class = reaction_type_to_process[reaction_type]
-    
+
     for edge in edge_list:
         
         edge_type = next(iter(edge.types())) # edges only have 1 type     
- 
+
         if edge_type in ['SUBSTRATE', 'TRANSLOCATE_FROM']:
             
             # (1) source is SUBSTRATE
             key = 'source'
             name = translate[reaction_id][edge.start_node['name']]
             location = edge[f'{key}_location']
-            form = edge[f'{key}_form']            
+            form = edge[f'{key}_form']
             substrates.update([(name, form, location)])
-                      
+
             # (2) target is MODIFIER if not Pseudo node
-            if not (  "PseudoNode" in edge.end_node.labels  ):
+            if "PseudoNode" not in edge.end_node.labels:
                 key = 'target'
                 name = translate[reaction_id][edge.end_node['name']]
                 location = edge[f'{key}_location']
                 form = edge[f'{key}_form']        
                 modifiers.update([(name, form, location)])
-                
+
         elif edge_type in ['PRODUCT', 'TRANSLOCATE_TO']:
             
             # (1) source is MODIFIER if not Pseudo node
-            if not (  "PseudoNode" in edge.start_node.labels  ):
+            if "PseudoNode" not in edge.start_node.labels:
                 key = 'source'
                 name = translate[reaction_id][edge.start_node['name']]
                 location = edge[f'{key}_location']
                 form = edge[f'{key}_form']        
                 modifiers.update([(name, form, location)])
-                  
+
             # (2) target is PRODUCT
             key = 'target'
             name = translate[reaction_id][edge.end_node['name']]
             location = edge[f'{key}_location']
             form = edge[f'{key}_form']
             products.update([(name, form, location)])
-        
+
         elif edge_type in  ['INHIBITS',  'ACTIVATES']:
             # (1) source is MODIFIER
             key = 'source'
@@ -595,28 +583,28 @@ def add_reaction(libsbgn_map, conn, reaction_id, edge_list):
             location = edge[f'{key}_localisation']
             form = edge[f'{key}_form']        
             substrates.update([(name, form, location)])
-            
+
             # (2) product_property is PRODUCT
             key = 'product'
             location = edge[f'{key}_location']
             form = edge[f'{key}_form']        
             products.update([(name, form, location)])
-            
+
     print(reaction_id, reaction_type, substrates, products, modifiers)
-    
+
     base_location = next(iter(substrates))[2]        
-    
+
     if reaction_type == 'degradation/secretion':
         name = "empty set"
         form = 'na'
         products.update([(name, form, base_location)])
- 
-    if reaction_type == 'undefined':
+
+    elif reaction_type == 'undefined':
         print("undefined reaction")
         return
-        
+
     # FINALLY enter the reaction
-    
+
     '''
                     (modifier)
                          |
@@ -624,7 +612,7 @@ def add_reaction(libsbgn_map, conn, reaction_id, edge_list):
                         \|/
     (substrate)----[process/reaction]---->(product)
     '''   
-    
+
     # (1) process glyph   
     process_identifier = reaction_glyph(libsbgn_map, conn, reaction_id, 
                                                               process_glyph_class, base_location)
@@ -633,7 +621,7 @@ def add_reaction(libsbgn_map, conn, reaction_id, edge_list):
     for (name, form, location) in substrates:
         #print('substrate:  ',   name, form, location)
         substrate_identifier = node_glyph(libsbgn_map, conn, name, form, location)
-        
+
         arc_class = edge_to_arc[reaction_type]['SUBSTRATE']
         reaction_arc(libsbgn_map, conn, substrate_identifier, process_identifier,reaction_id, arc_class)
 
@@ -641,22 +629,22 @@ def add_reaction(libsbgn_map, conn, reaction_id, edge_list):
     for (name, form, location) in products:
         #print('product:  ', name, form, location)
         product_identifier = node_glyph(libsbgn_map, conn, name, form, location)
-        
+
         arc_class = edge_to_arc[reaction_type]['PRODUCT']
         reaction_arc(libsbgn_map, conn, process_identifier, product_identifier, reaction_id, arc_class)
-    
+
     # (4) modifier glyphs and arcs 
     for (name, form, location) in modifiers:
         #print('modifier:  ',   name, form, location)
         modifier_identifier = node_glyph(libsbgn_map, conn, name, form, location)
-        
+
         arc_class = edge_to_arc[reaction_type]['MODIFIER']
         reaction_arc(libsbgn_map, conn, modifier_identifier, process_identifier, reaction_id, arc_class)
     
 
 def main():
     reactions = graph.run("MATCH ()-[r]-() WHERE EXISTS(r.reaction_id) RETURN DISTINCT r.reaction_id").data()
-    reactions = set([r['r.reaction_id'] for r in reactions])
+    reactions = {r['r.reaction_id'] for r in reactions}
 
     edge_matcher = RelationshipMatcher(graph)
 
