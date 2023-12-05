@@ -79,15 +79,15 @@ def metabolite_node_query(file_name,
                         ):
     base_label = ':Metabolite'
     if type(labels) == list:
-        node_label = base_label + ':' + ':'.join(labels)
+        node_label = f'{base_label}:' + ':'.join(labels)
     else:
-        node_label = base_label + ':' + labels
-    
+        node_label = f'{base_label}:' + labels
+
     key = {"file_name":file_name, 
            "node_label":node_label, 
            "name":n_name}
 
-    q = '''USING PERIODIC COMMIT 500
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p{node_label}   {{ 
                 name:{name}, 
@@ -100,9 +100,9 @@ def metabolite_node_query(file_name,
                 
                 external_links:split(line.external_links, ",")
                 
-            }})'''.format(**key)
-    
-    return q
+            }})'''.format(
+        **key
+    )
 
 
 def foreign_node_query(file_name, 
@@ -112,15 +112,15 @@ def foreign_node_query(file_name,
     
     base_label = ':Foreign'
     if type(labels) == list:
-        node_label = base_label + ':' + ':'.join(labels)
+        node_label = f'{base_label}:' + ':'.join(labels)
     else:
-        node_label = base_label + ':' + labels
-    
+        node_label = f'{base_label}:' + labels
+
     key = {"file_name":file_name, 
            "node_label":node_label, 
            "name":n_name}
 
-    q = '''USING PERIODIC COMMIT 500
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p{node_label}   {{ 
                 name:{name}, 
@@ -133,9 +133,9 @@ def foreign_node_query(file_name,
                 external_links:split(line.external_links, ","),
                                              
                 classification:line.classification
-            }})'''.format(**key)
-    
-    return q
+            }})'''.format(
+        **key
+    )
 
 def bioelement_node_query(file_name, 
                          labels, 
@@ -143,21 +143,16 @@ def bioelement_node_query(file_name,
                         ):
     
 
-    if type(labels) == list:
-        node_label = ':' + ':'.join(labels)
-    else:
-        node_label = ':' + labels
-    
+    node_label = ':' + ':'.join(labels) if type(labels) == list else ':' + labels
     key = {"file_name":file_name, 
            "node_label":node_label, 
            "name":n_name}
 
-    species_str = ""
-    for specie in species:
-        species_str += f"{specie}_homologues:split(line.{specie}_homologues, ','),\n                "
-
-    
-    q = '''USING PERIODIC COMMIT 500
+    species_str = "".join(
+        f"{specie}_homologues:split(line.{specie}_homologues, ','),\n                "
+        for specie in species
+    )
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p{node_label}   {{ 
                 name:{name}, 
@@ -177,24 +172,20 @@ def bioelement_node_query(file_name,
                 
                 synonyms:split(line.synonyms, ",")
                
-            }})'''.format(**key, species_str=species_str)
-    
-    return q
+            }})'''.format(
+        **key, species_str=species_str
+    )
 
 def process_node_query(file_name, 
                           labels,
                           n_name="line.NodeName"
                         ):
-    if type(labels) == list:
-        node_label = ':' + ':'.join(labels)
-    else:
-        node_label = ':' + labels
-    
+    node_label = ':' + ':'.join(labels) if type(labels) == list else ':' + labels
     key = {"file_name":file_name, 
            "node_label":node_label, 
            "name":n_name}
 
-    q = '''USING PERIODIC COMMIT 500
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p{node_label}   {{ 
                 name:{name}, 
@@ -207,9 +198,9 @@ def process_node_query(file_name,
                 
                 external_links:split(line.external_links, ",")
                 
-            }})'''.format(**key)
-    
-    return q
+            }})'''.format(
+        **key
+    )
 
 
 def reaction_node_query(file_name, name="line.reaction_id", reaction_id="line.reaction_id"):
@@ -217,8 +208,8 @@ def reaction_node_query(file_name, name="line.reaction_id", reaction_id="line.re
            "name":name, 
           "reaction_id":reaction_id, 
           "label":"Reaction"}
-    
-    q = '''USING PERIODIC COMMIT 500
+
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            CREATE (p:{label}   {{ 
                 name:{name}, 
@@ -234,9 +225,9 @@ def reaction_node_query(file_name, name="line.reaction_id", reaction_id="line.re
                 reaction_kinetics:line.kinetics, 
                 model_version:line.ModelV
                 
-            }})'''.format(**key)    
-
-    return q
+            }})'''.format(
+        **key
+    )
 
 
 
@@ -305,18 +296,18 @@ def make_create_type_of_edge_query(file_name, edge_type,
                            source_name="line.source_name", target_name="line.target_name",
                           ):
 
-    if not source_label == "":
+    if source_label != "":
         source_label = ':' + source_label
-        
-    if not target_label == "":
+
+    if target_label != "":
         target_label = ':' + target_label
-                
+
     key ={"file_name":file_name, "edge_type":edge_type,
           "source_label":source_label, "target_label":target_label,
           "source_name":source_name, "target_name":target_name, 
          }
-    
-    q = '''USING PERIODIC COMMIT 500
+
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            
            MATCH (source{source_label} {{ name:{source_name}}}),
@@ -329,9 +320,9 @@ def make_create_type_of_edge_query(file_name, edge_type,
                         model_status:line.ModelStatus,
                         
                         pathway:line.Process
-                        }}]->(target)'''.format(**key)
-
-    return q
+                        }}]->(target)'''.format(
+        **key
+    )
 
 
 
@@ -354,10 +345,10 @@ def dict_to_str(d):
 
 
 def get_keys(key_prefix, line_prefix):
-    keys = {}
-    for value in ["form", "location"]: 
-        keys[f"{key_prefix}_{value}"] = f"line.{line_prefix}_{value}"   
-    return keys
+    return {
+        f"{key_prefix}_{value}": f"line.{line_prefix}_{value}"
+        for value in ["form", "location"]
+    }
 
 def make_create_reaction_edge_query(file_name, edge_type, 
                                     source_prefix, target_prefix, 
@@ -366,19 +357,19 @@ def make_create_reaction_edge_query(file_name, edge_type,
                                     target_name=None):
     if type(source_label) == list:
         source_label = ':' + ':'.join(source_label)
-    elif not source_label == "":
+    elif source_label != "":
         source_label = ':' + source_label
-    
+
     if type(target_label) == list:
         target_label = ':' + ':'.join(target_label)
-    elif not target_label == "":
+    elif target_label != "":
         target_label = ':' + target_label
 
-    
+
     key ={"file_name":file_name, "edge_type":edge_type,
           "source_label":source_label, "target_label":target_label}
-    
-    
+
+
     source_str = dict_to_str(get_keys("source", source_prefix))
     target_str = dict_to_str(get_keys("target", target_prefix))
 
@@ -390,8 +381,8 @@ def make_create_reaction_edge_query(file_name, edge_type,
         key['target_name'] = target_name
     else:
         key['target_name'] = f"line.{target_prefix}_name"                
-    
-    q = '''USING PERIODIC COMMIT 500
+
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            
            MATCH (source{source_label} {{ name:{source_name}}}),
@@ -406,9 +397,9 @@ def make_create_reaction_edge_query(file_name, edge_type,
                         reaction_type:line.reaction_type,
                         reaction_kinetics:line.kinetics
                         
-                        }}]->(target)'''.format(**key, source_str=source_str, target_str=target_str)
-
-    return q
+                        }}]->(target)'''.format(
+        **key, source_str=source_str, target_str=target_str
+    )
 
 
 def make_create_requlatory_edge_query(file_name, edge_type, 
@@ -417,26 +408,26 @@ def make_create_requlatory_edge_query(file_name, edge_type,
                                     source_name=None, 
                                     target_name=None):
 
-    if not (edge_type in ['ACTIVATES', 'INHIBITS']):
+    if edge_type not in ['ACTIVATES', 'INHIBITS']:
         print("Not regulatory edge type")
         return 
-    
-    if not source_label == "":
+
+    if source_label != "":
         source_label = ':' + source_label
-        
-    if not target_label == "":
+
+    if target_label != "":
         target_label = ':' + target_label
-                
+
     key ={"file_name":file_name, "edge_type":edge_type,
           "source_label":source_label, "target_label":target_label}
-    
-    
+
+
     source_str = dict_to_str(get_keys("source", source_prefix))
     target_str = dict_to_str(get_keys("target", target_prefix))
 
     product_str = dict_to_str(get_keys("product", product_prefix))
-    
-   
+
+
     if source_name:
         key['source_name'] = source_name
     else:
@@ -445,8 +436,8 @@ def make_create_requlatory_edge_query(file_name, edge_type,
         key['target_name'] = target_name
     else:
         key['target_name'] = f"line.{target_prefix}_name"                
-    
-    q = '''USING PERIODIC COMMIT 500
+
+    return '''USING PERIODIC COMMIT 500
            LOAD CSV WITH HEADERS FROM  'file:///{file_name}' AS line FIELDTERMINATOR '\t'
            
            MATCH (source{source_label} {{ name:{source_name}}}),
@@ -471,9 +462,12 @@ def make_create_requlatory_edge_query(file_name, edge_type,
                         reaction_mechanism:line.Modifications, 
                         reaction_kinetics:line.kinetics, 
                         model_version:line.ModelV
-                        }}]->(target)'''.format(**key, source_str=source_str, target_str=target_str, product_str=product_str)
-
-    return q
+                        }}]->(target)'''.format(
+        **key,
+        source_str=source_str,
+        target_str=target_str,
+        product_str=product_str
+    )
 
 empty_strings = ["-", "?", "[empty]", "nan", "n.a.", np.nan, '[undefined]', 'NULL', '']
 
@@ -483,17 +477,14 @@ def only_asci(x):
 
 
 def list_string_to_nice_string(x, delim="|"):
-    if not (x in empty_strings):
+    if x not in empty_strings:
         nice_list = [y.strip() for y in str(x).split(delim)]
         return ", ".join(nice_list)
     else:
         return ""
 
 def lower_string(x):
-    if not (x in empty_strings):
-        return x.lower().strip()
-    else:
-        return ""   
+    return x.lower().strip() if x not in empty_strings else ""   
     
 def get_latest_model(x):
     if x.shape[0] == 1:
@@ -523,30 +514,22 @@ def list_to_string(x):
     l = []
     for s in x:
         s = str(s)
-        if not (s in empty_strings):
+        if s not in empty_strings:
             l.append(s)
-    
+
     return ",".join(l)
 
 def get_second_item(x, delim="/"):
-    if not (x in empty_strings):
-        nice_list = [y.strip().lower() for y in str(x).split(delim)]
-        if len(nice_list) == 1:
-            return nice_list[0]
-        else:
-            return nice_list[1]
-    else:
+    if x in empty_strings:
         return ""
+    nice_list = [y.strip().lower() for y in str(x).split(delim)]
+    return nice_list[0] if len(nice_list) == 1 else nice_list[1]
 
 def rest_of_items(x, delim="/"):
-    if not (x in empty_strings):
-        nice_list = [y.strip().lower() for y in str(x).split(delim)]
-        if len(nice_list) > 1:
-            return nice_list[0]
-        else:
-            return ""
-    else:
+    if x in empty_strings:
         return ""
+    nice_list = [y.strip().lower() for y in str(x).split(delim)]
+    return nice_list[0] if len(nice_list) > 1 else ""
     
 def unnesting(df, explode):
     idx = df.index.repeat(df[explode[0]].str.len())
@@ -559,10 +542,7 @@ def unnesting(df, explode):
 
 def reorder_ids(x):
     # reorder ids for complexes
-    if type(x) == np.float:
-        return np.nan
-    else:
-        return '|'.join(sorted(x.split("|")))
+    return np.nan if type(x) == np.float else '|'.join(sorted(x.split("|")))
     
 def get_unique_entries(df, column):
     s = set()
