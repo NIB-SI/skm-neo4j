@@ -3,8 +3,8 @@ services:
   neo4j:
     build:
       context: .
-    environment:
-      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+    env_file:
+      - .env # used inside container
     ports:
       - "7474:7474"
       - "7687:7687"
