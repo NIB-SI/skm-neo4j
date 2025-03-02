@@ -1,0 +1,5 @@
+.env
+
+neo4j_db/logs/*
+neo4j_db/data/db/*
+neo4j_db/plugins/*
